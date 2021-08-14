@@ -8,6 +8,13 @@
     <link rel="stylesheet" href="fontawesome/css/all.css" />
     <!-- bootstrap 4.6 -->
     <link rel="stylesheet" href="bootstrap4/css/bootstrap.css" />
+    <!-- leaflet css -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A=="
+      crossorigin=""
+    />
 
     <style>
       body {
@@ -25,7 +32,7 @@
         display: flex;
         justify-content: space-between;
         align-items: baseline;
-        margin-bottom: 1rem;
+        margin-bottom: 1.2rem;
         font-weight: bold;
       }
 
@@ -56,7 +63,7 @@
         color: #f1ff5c;
         box-shadow: 0 0.5rem 0.5rem -0.4rem #f1ff5c;
         transform: translateY(-0.25rem);
-        animation: btnPopping 0.8s linear infinite alternate;
+        animation: btnPopping 0.6s ease-in infinite alternate;
       }
 
       @keyframes btnPopping {
@@ -68,6 +75,12 @@
           transform: translateY(0);
           box-shadow: 0 0.5rem 0.3rem -0.6rem #f1ff5c;
         }
+      }
+
+      #map {
+        /* NOTE height setting with vh */
+        height: 60vh;
+        width: 100%;
       }
     </style>
     <!-- NOTE title -->
@@ -123,8 +136,8 @@
     </nav>
     <!-- navbar end -->
     <!-- NOTE start -->
-    <div class="container mt-3 mt-md-5">
-      <div class="row">
+    <div class="container mt-3 mt-md-4">
+      <div class="row align-items-stretch">
         <div class="col-md-6 col-lg-4">
           <div
             class="
@@ -134,9 +147,12 @@
               justify-content-center
               align-items-center
               px-5
+              h-100
             "
           >
-            <h3 class="title my-3 font-weight-bold">所在位置</h3>
+            <!-- TODO: php -->
+            <h2 class="font-weight-bold">Hi! 皮卡丘</h2>
+            <h3 class="title my-4 font-weight-bold">所在位置</h3>
             <div class="info w-100 px-1">
               緯度:<span class="lat">待確認</span>
             </div>
@@ -153,11 +169,22 @@
             <div class="info w-100 px-1">
               誤差:<span class="accuracy">待確認</span>
             </div>
-            <button class="geo_btn mt-2 mb-4 w-100 py-3">點擊後開始計算</button>
+            <button class="geo_btn mt-3 w-100 py-3">點擊後開始計算</button>
           </div>
+        </div>
+
+        <div class="col-md-6 col-lg-8">
+          <div id="map"></div>
         </div>
       </div>
     </div>
+
+    <!-- Make sure you put this AFTER Leaflet's CSS -->
+    <script
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA=="
+      crossorigin=""
+    ></script>
 
     <script>
       const titleText = document.querySelector('.title');
@@ -180,7 +207,15 @@
             maximumAge: 0,
           };
 
-          navigator.geolocation.getCurrentPosition(resolve, reject, options);
+          //  if reject
+          const userDenied = () =>
+            reject(new Error('☜(ﾟヮﾟ☜) 請允許瀏覽器讀取您的位置資料 QQ'));
+
+          navigator.geolocation.getCurrentPosition(
+            resolve,
+            userDenied,
+            options
+          );
         });
 
       // NOTE  geo reverse 取得當前地理位置
@@ -238,13 +273,31 @@
             console.log(['fetchLocationInfo', lat, lng, accuracy]);
             return [lat, lng, accuracy];
           })
-          .then(res => geoReverse(res));
+          .then(res => geoReverse(res))
+          .catch(err => alert(err.message));
       };
 
       geoBtn.addEventListener('click', () => {
         titleText.innerText = '計算中';
         fetchLocationInfo();
       });
+
+      const mapRender = (lat = 25.03382, lng = 121.5434, zoom = 16) => {
+        //   max 18? default 13
+        const map = L.map('map').setView([lat, lng], zoom);
+        console.log(lat, lng, zoom);
+
+        //   https://wiki.openstreetmap.org/wiki/Tile_servers
+        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+
+        L.marker([lat, lng]).addTo(map).bindPopup('資策會').openPopup();
+        // L.marker([25.03355, 121.55]).addTo(map).bindPopup('好歐');
+      };
+
+      mapRender();
     </script>
 
     <!-- WARN end -->
