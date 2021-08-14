@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- fontawsome -->
+    <link rel="stylesheet" href="fontawesome/css/all.css" />
+    <!-- bootstrap 4.6 -->
+    <link rel="stylesheet" href="bootstrap4/css/bootstrap.css" />
+
+    <style>
+      body {
+        background-color: #151b29;
+      }
+
+      .geo_box {
+        color: #ffa260;
+        border: 2px solid;
+        border-radius: 5px;
+      }
+
+      .info {
+        font-size: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 1rem;
+        font-weight: bold;
+      }
+
+      .geo_btn {
+        background: none;
+        color: #ffa260;
+        border: 2px solid;
+        transition: all 0.2s;
+        font-size: 1.3rem;
+        font-weight: 600;
+        border-radius: 20px;
+      }
+
+      .geo_btn:hover {
+        border-color: #f1ff5c;
+        color: #f1ff5c;
+        box-shadow: 0 0.5rem 0.5rem -0.4rem #f1ff5c;
+        transform: translateY(-0.25rem);
+        animation-play-state: paused;
+      }
+
+      .geo_btn:active {
+        transform: translateY(0);
+      }
+
+      .geo_btn_shine {
+        border-color: #f1ff5c;
+        color: #f1ff5c;
+        box-shadow: 0 0.5rem 0.5rem -0.4rem #f1ff5c;
+        transform: translateY(-0.25rem);
+        animation: btnPopping 0.8s linear infinite alternate;
+      }
+
+      @keyframes btnPopping {
+        from {
+          transform: translateY(-0.25rem);
+          box-shadow: 0rem 0.3rem 1.5rem 0rem #f1ff5c;
+        }
+        to {
+          transform: translateY(0);
+          box-shadow: 0 0.5rem 0.3rem -0.6rem #f1ff5c;
+        }
+      }
+    </style>
+    <!-- NOTE title -->
+    <title>Title</title>
+  </head>
+  <body>
+    <!-- navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <div class="container">
+        <!-- NOTE -->
+        <a class="navbar-brand" href="#">Team &#923;</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <!-- left side -->
+          <ul class="navbar-nav mr-auto">
+            <!-- NOTE temp 需要的話複製就好 不要動這個 li-->
+            <li class="nav-item active">
+              <a class="nav-link" href="#">Member : </a>
+            </li>
+          </ul>
+
+          <!-- right side -->
+          <ul class="navbar-nav">
+            <!-- after log in,  will show up after login -->
+
+            <li class="nav-item active">
+              <a class="nav-link">皮卡丘</a>
+            </li>
+
+            <!-- NOTE  add $activeLi ternary-->
+            <li class="nav-item">
+              <a class="nav-link" href="#">編輯個人資料</a>
+            </li>
+
+            <!-- log out -->
+            <li class="nav-item">
+              <a class="nav-link" href="#">登出</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <!-- navbar end -->
+    <!-- NOTE start -->
+    <div class="container mt-3 mt-md-5">
+      <div class="row">
+        <div class="col-md-6 col-lg-4">
+          <div
+            class="
+              geo_box
+              d-flex
+              flex-column
+              justify-content-center
+              align-items-center
+              px-5
+            "
+          >
+            <h3 class="title my-3 font-weight-bold">所在位置</h3>
+            <div class="info w-100 px-1">
+              緯度:<span class="lat">待確認</span>
+            </div>
+            <div class="info w-100 px-1">
+              經度:<span class="lng">待確認</span>
+            </div>
+            <div class="info w-100 px-1">
+              城市:<span class="city">待確認</span>
+            </div>
+            <div class="info w-100 px-1">
+              區域: <span class="locality">待確認</span>
+            </div>
+            <!-- for test -->
+            <div class="info w-100 px-1">
+              誤差:<span class="accuracy">待確認</span>
+            </div>
+            <button class="geo_btn mt-2 mb-4 w-100 py-3">點擊後開始計算</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const titleText = document.querySelector('.title');
+      const latText = document.querySelector('.lat');
+      const lngText = document.querySelector('.lng');
+      const cityText = document.querySelector('.city');
+      const localityText = document.querySelector('.locality');
+      const accuracyText = document.querySelector('.accuracy');
+      const geoBtn = document.querySelector('.geo_btn');
+
+      // NOTE 瀏覽器API 取得當前地理座標
+      const newWhereAmI = () =>
+        new Promise((resolve, reject) => {
+          // WARN 此為設定檔 要再討論
+          const options = {
+            enableHighAccuracy: true,
+            // WARN timeout:won't return until the position is available
+            // maybe change to 5000?
+            timeout: Infinity,
+            maximumAge: 0,
+          };
+
+          navigator.geolocation.getCurrentPosition(resolve, reject, options);
+        });
+
+      // NOTE  geo reverse 取得當前地理位置
+      const geoReverse = ([lat, lng, accuracy]) => {
+        fetch(
+          `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=zh`
+        )
+          .then(res => res.json())
+          .then(data => {
+            console.log('--geoReverse Success--');
+            console.log(data); // geoReverse 結果
+
+            let { city } = data; //所在城市 e.g.台北市 (因桃園改為市 因此這邊改設為let)
+            let { locality } = data; //所在區  e.g. 中正區  (因桃園改為市 因此這邊改設為let)
+
+            // fix 桃園改名
+            if (city === '桃園縣') {
+              city = '桃園市';
+              locality = locality.slice(0, -1) + '區';
+            }
+
+            console.log(lat, lng, city, locality);
+
+            // from newWhereAmI
+            latText.innerText = lat.toFixed(5);
+            lngText.innerText = lng.toFixed(5);
+            accuracyText.innerText = accuracy.toFixed(1) + ' (米)';
+            // from geoReverse
+            cityText.innerText = city;
+            localityText.innerText = locality;
+            // for title
+            titleText.innerText = '您的位置是在:';
+
+            geoBtn.innerText = '點擊再次計算 🚴‍♂️';
+            geoBtn.classList.add('geo_btn_shine');
+          });
+      };
+
+      const fetchLocationInfo = () => {
+        // NOTE 沒有設定reject
+        newWhereAmI()
+          .then(pos => {
+            const { latitude: lat } = pos.coords; // 緯度 -> 重新命名為 lat
+            const { longitude: lng } = pos.coords; //經度 -> 重新命名為 lng
+            const { accuracy } = pos.coords; //準確度(誤差值) 以meters(公尺)為單位
+            //   const { latitude: lat, longitude: lng, accuracy } = pos.coords;
+            console.log('By Promise:');
+            console.log(`當前緯度: ${lat}`);
+            console.log(`當前經度: ${lng}`);
+            console.log(`當前誤差值: ${accuracy}(單位米)`);
+            // return [lat.toFixed(5), lng.toFixed(5)];
+            // return [lat, lng];
+
+            // NOTE 測試用: 加入 誤差值 accuracy
+            console.log(['fetchLocationInfo', lat, lng, accuracy]);
+            return [lat, lng, accuracy];
+          })
+          .then(res => geoReverse(res));
+      };
+
+      geoBtn.addEventListener('click', () => {
+        titleText.innerText = '計算中';
+        fetchLocationInfo();
+      });
+    </script>
+
+    <!-- WARN end -->
+    <script src="js/jquery-3.6.0.js"></script>
+    <script src="bootstrap4/js/bootstrap.bundle.js"></script>
+  </body>
+</html>
