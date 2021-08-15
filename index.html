@@ -28,7 +28,7 @@
       }
 
       .info {
-        font-size: 1.5rem;
+        font-size: 1.3rem;
         display: flex;
         justify-content: space-between;
         align-items: baseline;
@@ -44,6 +44,7 @@
         font-size: 1.3rem;
         font-weight: 600;
         border-radius: 20px;
+        animation: btnShine 0.6s ease-in infinite alternate;
       }
 
       .geo_btn:hover {
@@ -66,21 +67,30 @@
         animation: btnPopping 0.6s ease-in infinite alternate;
       }
 
+      @keyframes btnShine {
+        from {
+          box-shadow: 0 0 1rem 0 #f1ff5c;
+        }
+        to {
+          box-shadow: 0 0 0 -0.6rem #f1ff5c;
+        }
+      }
+
       @keyframes btnPopping {
         from {
           transform: translateY(-0.25rem);
-          box-shadow: 0rem 0.3rem 1.5rem 0rem #f1ff5c;
+          box-shadow: 0 0 1rem 0 #f1ff5c;
         }
         to {
           transform: translateY(0);
-          box-shadow: 0 0.5rem 0.3rem -0.6rem #f1ff5c;
+          box-shadow: 0 0 0 -0.6rem #f1ff5c;
         }
       }
 
       /* NOTE map */
       #map {
         /* NOTE height setting with vh */
-        height: 65vh;
+        height: 50vh;
         width: 100%;
       }
 
@@ -156,7 +166,7 @@
     </nav>
     <!-- navbar end -->
     <!-- NOTE start -->
-    <div class="container mt-3 mt-md-4">
+    <div class="container mt-3">
       <div class="row align-items-stretch">
         <div class="col-md-6 col-lg-4">
           <div
@@ -171,8 +181,7 @@
             "
           >
             <!-- TODO: php -->
-            <h2 class="font-weight-bold">Hi! 皮卡丘</h2>
-            <h3 class="title my-4 font-weight-bold">所在位置</h3>
+            <h3 class="title mt-2 mb-4 font-weight-bold">Hi! 皮卡丘</h3>
             <div class="info w-100 px-1">
               緯度:<span class="lat">待確認</span>
             </div>
@@ -189,12 +198,67 @@
             <div class="info w-100 px-1">
               誤差:<span class="accuracy">待確認</span>
             </div>
-            <button class="geo_btn mt-3 w-100 py-3">加入運動!</button>
+            <button class="geo_btn w-100 py-2 mt-1">以我的位置建立活動</button>
           </div>
         </div>
 
         <div class="col-md-6 col-lg-8">
           <div id="map"></div>
+        </div>
+      </div>
+    </div>
+    <!-- form start -->
+    <div class="container mt-4">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <div class="card-body">
+              <h5 class="card-title">以所選位置發起新活動</h5>
+              <!-- NOTE FIX onsubmit setting 還有記得FormData POST -->
+              <form name="form1" onsubmit="checkForm(); return false;">
+                <div class="first-line">
+                  <!-- 活動類型 -->
+                  <!-- combobox -->
+                  <div class="form-group">
+                    <label for="activity_type">活動類型</label>
+                    <select
+                      class="form-control"
+                      id="activity_type"
+                      name="activity_type"
+                    >
+                      <option value="" disabled selected>
+                        -- 請選擇活動類型 --
+                      </option>
+                      <option value="跑步">跑步</option>
+                      <option value="爬山">爬山</option>
+                      <option value="游泳">游泳</option>
+                      <option value="健身">健身</option>
+                      <option value="其他">其他</option>
+                    </select>
+                  </div>
+                  <!-- first-line end -->
+                </div>
+
+                <!-- 活動內容 -->
+                <!-- flex-grow-1 -->
+                <div class="form-group">
+                  <label for="activity_detail">活動內容</label>
+                  <textarea
+                    placeholder="請輸入活動內容"
+                    class="form-control"
+                    id="activity_detail"
+                    name="activity_detail"
+                    cols="30"
+                    rows="1"
+                    style="resize: none"
+                  ></textarea>
+                  <small class="form-text"></small>
+                </div>
+
+                <button type="submit" class="btn btn-primary">建立</button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -268,16 +332,60 @@
         .bindPopup('我們的公司在這裡歐👍')
         .openPopup();
 
+      // console.log(
+      //   map
+      //     .distance(['25.03771', 121.50623], ['25.03785', 121.50465])
+      //     .toFixed(0)
+      // );
+
       // NOTE 有時間可討論看看 甚麼時間點 remove initMarker (暫定為全視窗)
       window.addEventListener('click', () => initMarker.remove());
 
       // 顯示當前位置 點擊新的時候移除先前的
       let userPick;
-      map.on('click', mapEvent => {
+      map.on('click', async mapEvent => {
+        // TODO: 當使用者滿足條件時 將地理座標存到資料庫
         console.log(mapEvent);
-        // console.log(mapEvent.latlng);
+        // NOTE 這邊取得當前點擊的經緯度
         const { lat, lng } = mapEvent.latlng;
-        console.log(lat, lng);
+
+        //FIX:這邊和fetchLocationInfo的code重複了 有時間修一下 + try catch
+        const cityInfo = await geoReverse(lat, lng);
+
+        let { city } = cityInfo; //所在城市 e.g.台北市 (因桃園改為市 因此這邊改設為let)
+        let { locality } = cityInfo; //所在區  e.g. 中正區  (因桃園改為市 因此這邊改設為let)
+        console.log(cityInfo);
+
+        // fix 桃園改名
+        if (city === '桃園縣') {
+          city = '桃園市';
+          locality = locality.slice(0, -1) + '區';
+        }
+
+        // for title
+        titleText.innerText = '您選擇的位置:';
+        // from mapEvent
+        latText.innerText = lat.toFixed(5);
+        lngText.innerText = lng.toFixed(5);
+        // NOTE FIX討論一下怎麼下內文會比較好?
+        accuracyText.innerText = '零誤差❤';
+
+        // from geoReverse
+        cityText.innerText = city;
+        localityText.innerText = locality;
+
+        //////////////////////////////////////////////////////////////
+        // console.log(userLat, userLng, 'HERE');
+        // NOTE 距離計算  TODO:  userLat userLng 是丟出來的 看以後能不能不要全域
+        let distanceStr = '';
+        if (userLat && userLng) {
+          const distanceBetween = map
+            .distance([lat, lng], [userLat, userLng])
+            .toFixed(0);
+          distanceStr = `<br>距離您 ${distanceBetween} (米)`;
+        }
+        // 移動到所選位置
+        map.flyTo([lat, lng], 17);
 
         userPick?.remove();
         userPick = L.marker([lat, lng])
@@ -288,10 +396,13 @@
               minWidth: 100,
               autoClose: false,
               closeOnClick: false,
+              // NOTE personal className
               className: 'map_icon',
             })
           )
-          .setPopupContent('你點的位置')
+          .setPopupContent(
+            `<strong>選擇的地點位於:<br>${city}${locality}${distanceStr}</strong>`
+          )
           .openPopup();
         console.log(userPick);
       });
@@ -317,8 +428,13 @@
 
       // NOTE render info into page by using geoLocation & geoReverse
       let curCircle; //避免重複點擊時效果疊加 會於下列函式中 先remove 後再次給值
+      let curMarker; // 同上
+      let userLat; // TODO:  userLat userLng 是丟出來的 看以後能不能不要全域
+      let userLng; // TODO:  userLat userLng 是丟出來的 看以後能不能不要全域
       const fetchLocationInfo = async () => {
         try {
+          // guard 在取得用戶當前座標前 用戶已經點選地圖並建立marker的情況
+          userPick?.remove();
           titleText.innerText = '計算中';
 
           const geoInfo = await geoLocation();
@@ -326,6 +442,10 @@
           const { longitude: lng } = geoInfo.coords; //經度 -> 重新命名為 lng
           const { accuracy } = geoInfo.coords; //準確度(誤差值) 以meters(公尺)為單位
           // const { latitude: lat, longitude: lng, accuracy } = geoInfo.coords;
+
+          //TODO: FIX 這邊為了讓 map.on(click) 的互動 而把userLat userLng 丟出來的 有時間的話修一下
+          userLat = lat;
+          userLng = lng;
 
           const cityInfo = await geoReverse(lat, lng);
 
@@ -351,23 +471,27 @@
           geoBtn.innerText = '點擊再次尋找 🚴‍♂️';
           geoBtn.classList.add('geo_btn_shine');
 
-          // current location popup
-          L.marker([lat, lng]).addTo(map).bindPopup('您的當前位置').openPopup();
-          // NOTE 紅圈
-
+          // remove current Marker and Circle
+          curMarker?.remove();
           curCircle?.remove();
+
+          // current location popup
+          curMarker = L.marker([lat, lng])
+            .addTo(map)
+            .bindPopup('您的當前位置')
+            .openPopup();
+
+          // NOTE 紅圈
           curCircle = L.circle([lat, lng], {
             color: 'red',
             fillColor: '#f03',
             fillOpacity: 0.1,
             // Radius of the circle, in meters.
-            // 半徑2.5公里 綜合五公里
-            radius: 2500,
-          })
-            .addTo(map)
-            .bindPopup('紅圈範圍');
+            // 半徑1.5公里 總和3公里
+            radius: 1500,
+          }).addTo(map);
 
-          // 跳到當前位置 zoom 改為13 放大範圍
+          // 跳到當前位置 zoom 改為14 放大範圍
           map.flyTo([lat, lng], 14);
         } catch (err) {
           alert(err.message);
