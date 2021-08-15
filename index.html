@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- fontawsome -->
+    <!-- fontawesome -->
     <link rel="stylesheet" href="fontawesome/css/all.css" />
     <!-- bootstrap 4.6 -->
     <link rel="stylesheet" href="bootstrap4/css/bootstrap.css" />
@@ -79,7 +79,7 @@
 
       #map {
         /* NOTE height setting with vh */
-        height: 60vh;
+        height: 65vh;
         width: 100%;
       }
     </style>
@@ -169,7 +169,7 @@
             <div class="info w-100 px-1">
               誤差:<span class="accuracy">待確認</span>
             </div>
-            <button class="geo_btn mt-3 w-100 py-3">點擊後開始計算</button>
+            <button class="geo_btn mt-3 w-100 py-3">加入運動!</button>
           </div>
         </div>
 
@@ -230,6 +230,76 @@
         return finalResult;
       };
 
+      //  NOTE Map
+      //   create map
+      const map = L.map('map').setView([25.03382, 121.5434], 14);
+      // console.log(map);
+
+      //   https://wiki.openstreetmap.org/wiki/Tile_servers
+      //   add tile layer to map  NOTE another .org -> .fr/hot
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+
+      L.marker([25.03382, 121.5434])
+        .addTo(map)
+        .bindPopup('我們的公司在這裡歐👍')
+        .openPopup();
+
+      // 紅圈
+      // let circle = L.circle([25.03382, 121.5434], {
+      //   color: 'red',
+      //   fillColor: '#f03',
+      //   fillOpacity: 0.1,
+      //   // Radius of the circle, in meters.
+      //   radius: 300,
+      // })
+      //   .addTo(map)
+      //   .bindPopup('紅圈範圍');
+
+      map.on('click', mapEvent => {
+        console.log(mapEvent);
+        // console.log(mapEvent.latlng);
+        const { lat, lng } = mapEvent.latlng;
+        console.log(lat, lng);
+
+        const a = L.marker([lat, lng])
+          .addTo(map)
+          .bindPopup(
+            L.popup({
+              maxWidth: 250,
+              minWidth: 100,
+              autoClose: false,
+              closeOnClick: false,
+              className: 'NOTE_my_class',
+            })
+          )
+          .setPopupContent('你點的位置')
+          .openPopup();
+
+        console.log(a);
+      });
+
+      /*
+        const mapRender = (lat = 25.03382, lng = 121.5434, zoom = 16) => {
+          // NOTE zoom max 18? default 13
+          const map = L.map('map').setView([lat, lng], zoom);
+
+          //   https://wiki.openstreetmap.org/wiki/Tile_servers
+          L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+            attribution:
+              '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+          }).addTo(map);
+
+          L.marker([lat, lng]).addTo(map).bindPopup('您的位置').openPopup();
+          L.marker([25.03382, 121.5434]).addTo(map).bindPopup('資策會');
+        };
+
+        mapRender();
+
+        */
+
       // NOTE render info into page by using geoLocation & geoReverse
       const fetchLocationInfo = async () => {
         try {
@@ -262,31 +332,31 @@
           // for title
           titleText.innerText = '您的位置是在:';
           // for btn
-          geoBtn.innerText = '點擊再次計算 🚴‍♂️';
+          geoBtn.innerText = '點擊再次尋找 🚴‍♂️';
           geoBtn.classList.add('geo_btn_shine');
+
+          // NOTE 紅圈
+          let circle = L.circle([lat, lng], {
+            color: 'red',
+            fillColor: '#f03',
+            fillOpacity: 0.1,
+            // Radius of the circle, in meters.
+            // 半徑2.5公里 綜合五公里
+            radius: 2500,
+          })
+            .addTo(map)
+            .bindPopup('紅圈範圍');
+
+          // 跳到當前位置
+          map.flyTo([lat, lng], 14);
+
+          L.marker([lat, lng]).addTo(map).bindPopup('您的當前位置').openPopup();
         } catch (err) {
           alert(err.message);
         }
       };
 
       geoBtn.addEventListener('click', fetchLocationInfo);
-
-      const mapRender = (lat = 25.03382, lng = 121.5434, zoom = 16) => {
-        //   max 18? default 13
-        const map = L.map('map').setView([lat, lng], zoom);
-        // console.log(lat, lng, zoom);
-
-        //   https://wiki.openstreetmap.org/wiki/Tile_servers
-        L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        }).addTo(map);
-
-        L.marker([lat, lng]).addTo(map).bindPopup('資策會').openPopup();
-        // L.marker([25.03355, 121.55]).addTo(map).bindPopup('好歐');
-      };
-
-      mapRender();
     </script>
 
     <!-- WARN end -->
