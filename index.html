@@ -215,7 +215,7 @@
             <div class="card-body">
               <h5 class="card-title">以所選位置發起新活動</h5>
               <!-- NOTE FIX onsubmit setting 還有記得FormData POST -->
-              <form name="form1" onsubmit="checkForm(); return false;">
+              <form name="geoForm" id="geoForm">
                 <div class="first-line">
                   <!-- 活動類型 -->
                   <!-- combobox -->
@@ -235,6 +235,9 @@
                       <option value="健身">健身</option>
                       <option value="其他">其他</option>
                     </select>
+                    <small class="form-text text-danger invisible typeWarn"
+                      >請選擇活動類型</small
+                    >
                   </div>
                   <!-- first-line end -->
                 </div>
@@ -244,7 +247,7 @@
                 <div class="form-group">
                   <label for="activity_detail">活動內容</label>
                   <textarea
-                    placeholder="請輸入活動內容"
+                    placeholder="請輸入活動內容 15~255字"
                     class="form-control"
                     id="activity_detail"
                     name="activity_detail"
@@ -252,7 +255,9 @@
                     rows="1"
                     style="resize: none"
                   ></textarea>
-                  <small class="form-text"></small>
+                  <small class="form-text text-danger invisible detailWarn"
+                    >請輸入15~255字的活動內容</small
+                  >
                 </div>
 
                 <button type="submit" class="btn btn-primary">建立</button>
@@ -271,13 +276,13 @@
     ></script>
 
     <script>
-      const titleText = document.querySelector('.title');
-      const latText = document.querySelector('.lat');
-      const lngText = document.querySelector('.lng');
-      const cityText = document.querySelector('.city');
-      const localityText = document.querySelector('.locality');
-      const accuracyText = document.querySelector('.accuracy');
-      const geoBtn = document.querySelector('.geo_btn');
+      const titleText = document.querySelector(".title");
+      const latText = document.querySelector(".lat");
+      const lngText = document.querySelector(".lng");
+      const cityText = document.querySelector(".city");
+      const localityText = document.querySelector(".locality");
+      const accuracyText = document.querySelector(".accuracy");
+      const geoBtn = document.querySelector(".geo_btn");
 
       // NOTE 瀏覽器API 取得當前地理座標
       const geoLocation = () =>
@@ -293,7 +298,7 @@
 
           //  if reject
           const userDenied = () =>
-            reject(new Error('☜(ﾟヮﾟ☜) 請允許瀏覽器讀取您的位置資料 QQ'));
+            reject(new Error("☜(ﾟヮﾟ☜) 請允許瀏覽器讀取您的位置資料 QQ"));
 
           navigator.geolocation.getCurrentPosition(
             resolve,
@@ -308,7 +313,7 @@
           `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lng}&localityLanguage=zh`
         );
 
-        if (!revResult.ok) throw new Error('Problem with geoReverse');
+        if (!revResult.ok) throw new Error("Problem with geoReverse");
 
         const finalResult = await revResult.json();
         return finalResult;
@@ -316,12 +321,12 @@
 
       //  NOTE Map
       //   create map 使用資策會當作初始地點 zoom 17 -> zoom 14 (once btn fired)
-      const map = L.map('map').setView([25.03382, 121.5434], 17);
+      const map = L.map("map").setView([25.03382, 121.5434], 17);
       // console.log(map);
 
       //   https://wiki.openstreetmap.org/wiki/Tile_servers
       //   add tile layer to map  NOTE another .org -> .fr/hot
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution:
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
@@ -329,7 +334,7 @@
       // init popup -> would be removed once btn is fired
       const initMarker = L.marker([25.03382, 121.5434])
         .addTo(map)
-        .bindPopup('我們的公司在這裡歐👍')
+        .bindPopup("我們的公司在這裡歐👍")
         .openPopup();
 
       // console.log(
@@ -339,11 +344,11 @@
       // );
 
       // NOTE 有時間可討論看看 甚麼時間點 remove initMarker (暫定為全視窗)
-      window.addEventListener('click', () => initMarker.remove());
+      window.addEventListener("click", () => initMarker.remove());
 
       // 顯示當前位置 點擊新的時候移除先前的
       let userPick;
-      map.on('click', async mapEvent => {
+      map.on("click", async (mapEvent) => {
         // TODO: 當使用者滿足條件時 將地理座標存到資料庫
         console.log(mapEvent);
         // NOTE 這邊取得當前點擊的經緯度
@@ -357,18 +362,18 @@
         console.log(cityInfo);
 
         // fix 桃園改名
-        if (city === '桃園縣') {
-          city = '桃園市';
-          locality = locality.slice(0, -1) + '區';
+        if (city === "桃園縣") {
+          city = "桃園市";
+          locality = locality.slice(0, -1) + "區";
         }
 
         // for title
-        titleText.innerText = '您選擇的位置:';
+        titleText.innerText = "您選擇的位置:";
         // from mapEvent
         latText.innerText = lat.toFixed(5);
         lngText.innerText = lng.toFixed(5);
         // NOTE FIX討論一下怎麼下內文會比較好?
-        accuracyText.innerText = '零誤差❤';
+        accuracyText.innerText = "零誤差❤";
 
         // from geoReverse
         cityText.innerText = city;
@@ -377,7 +382,7 @@
         //////////////////////////////////////////////////////////////
         // console.log(userLat, userLng, 'HERE');
         // NOTE 距離計算  TODO:  userLat userLng 是丟出來的 看以後能不能不要全域
-        let distanceStr = '';
+        let distanceStr = "";
         if (userLat && userLng) {
           const distanceBetween = map
             .distance([lat, lng], [userLat, userLng])
@@ -397,7 +402,7 @@
               autoClose: false,
               closeOnClick: false,
               // NOTE personal className
-              className: 'map_icon',
+              className: "map_icon",
             })
           )
           .setPopupContent(
@@ -435,7 +440,7 @@
         try {
           // guard 在取得用戶當前座標前 用戶已經點選地圖並建立marker的情況
           userPick?.remove();
-          titleText.innerText = '計算中';
+          titleText.innerText = "計算中";
 
           const geoInfo = await geoLocation();
           const { latitude: lat } = geoInfo.coords; // 緯度 -> 重新命名為 lat
@@ -453,23 +458,23 @@
           let { locality } = cityInfo; //所在區  e.g. 中正區  (因桃園改為市 因此這邊改設為let)
 
           // fix 桃園改名
-          if (city === '桃園縣') {
-            city = '桃園市';
-            locality = locality.slice(0, -1) + '區';
+          if (city === "桃園縣") {
+            city = "桃園市";
+            locality = locality.slice(0, -1) + "區";
           }
 
           // from geoLocation
           latText.innerText = lat.toFixed(5);
           lngText.innerText = lng.toFixed(5);
-          accuracyText.innerText = accuracy.toFixed(1) + ' (米)';
+          accuracyText.innerText = accuracy.toFixed(1) + " (米)";
           // from geoReverse
           cityText.innerText = city;
           localityText.innerText = locality;
           // for title
-          titleText.innerText = '您的位置是在:';
+          titleText.innerText = "您的位置是在:";
           // for btn
-          geoBtn.innerText = '點擊再次尋找 🚴‍♂️';
-          geoBtn.classList.add('geo_btn_shine');
+          geoBtn.innerText = "點擊再次尋找 🚴‍♂️";
+          geoBtn.classList.add("geo_btn_shine");
 
           // remove current Marker and Circle
           curMarker?.remove();
@@ -478,13 +483,13 @@
           // current location popup
           curMarker = L.marker([lat, lng])
             .addTo(map)
-            .bindPopup('您的當前位置')
+            .bindPopup("您的當前位置")
             .openPopup();
 
           // NOTE 紅圈
           curCircle = L.circle([lat, lng], {
-            color: 'red',
-            fillColor: '#f03',
+            color: "red",
+            fillColor: "#f03",
             fillOpacity: 0.1,
             // Radius of the circle, in meters.
             // 半徑1.5公里 總和3公里
@@ -498,7 +503,67 @@
         }
       };
 
-      geoBtn.addEventListener('click', fetchLocationInfo);
+      geoBtn.addEventListener("click", fetchLocationInfo);
+
+      // NOTE form data to backend
+      const geoForm = document.querySelector("#geoForm");
+      geoForm.addEventListener("submit", (e) => {
+        e.preventDefault();
+        let isPass = true;
+        const activityType = document.querySelector("#activity_type");
+        const activityDetail = document.querySelector("#activity_detail");
+        const typeWarn = document.querySelector(".typeWarn");
+        const detailWarn = document.querySelector(".detailWarn");
+
+        const optionType = ["跑步", "爬山", "游泳", "健身", "其他"];
+        const warningVisible = (info, visible) => {
+          if (visible) return info.classList.remove("invisible");
+          info.classList.add("invisible");
+        };
+        // WARN FIX verify lat (應急用) 之後改成座標生成後才 visible
+        if (latText.textContent == "待確認")
+          return alert("請先於地圖上選擇發起活動的位置 ಥ_ಥ ");
+
+        // reset
+        warningVisible(typeWarn, false);
+        warningVisible(detailWarn, false);
+
+        // verify activity type
+        if (!optionType.includes(activityType.value)) {
+          warningVisible(typeWarn, true);
+          isPass = false;
+        }
+        // verify activity detail
+        if (
+          activityDetail.value.length <= 15 ||
+          activityDetail.value.length > 255
+        ) {
+          warningVisible(detailWarn, true);
+          isPass = false;
+        }
+
+        if (!isPass) return;
+
+        const fd = new FormData(geoForm);
+        fd.append("lat", latText.textContent);
+        fd.append("lng", lngText.textContent);
+        fd.append("city", cityText.textContent);
+        fd.append("locality", localityText.textContent);
+        fetch("./004-joey-api.php", {
+          method: "POST",
+          body: fd,
+        })
+          .then((res) => res.json())
+          .then((obj) => {
+            console.log(obj);
+            // NOTE if wrong return (might need throw error in future)
+            // if (!obj.success) return alert(obj.error);
+
+            // if correct then redirect to home page
+            // NOTE remember is location (lower case) not Location QQ
+            // location.href = './index_.php';
+          });
+      });
     </script>
 
     <!-- WARN end -->
