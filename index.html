@@ -535,7 +535,7 @@
         }
         // verify activity detail
         if (
-          activityDetail.value.length <= 15 ||
+          activityDetail.value.length < 15 ||
           activityDetail.value.length > 255
         ) {
           warningVisible(detailWarn, true);
