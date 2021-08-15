@@ -77,10 +77,30 @@
         }
       }
 
+      /* NOTE map */
       #map {
         /* NOTE height setting with vh */
         height: 65vh;
         width: 100%;
+      }
+
+      /* NOTE pop up */
+      /* pop up的背景 */
+      .leaflet-popup .leaflet-popup-content-wrapper {
+        background-color: #151b29;
+        color: #ffa260;
+        border-radius: 15px;
+        /* padding: 3px; */
+        /* padding-right: 0.6rem; */
+      }
+      /* pop up 背景下方的三角形 */
+      .leaflet-popup .leaflet-popup-tip {
+        background-color: #151b29;
+      }
+
+      /* pop div內的文字 */
+      .leaflet-popup .leaflet-popup-content {
+        font-size: 1rem;
       }
     </style>
     <!-- NOTE title -->
@@ -231,8 +251,8 @@
       };
 
       //  NOTE Map
-      //   create map
-      const map = L.map('map').setView([25.03382, 121.5434], 14);
+      //   create map 使用資策會當作初始地點 zoom 17 -> zoom 14 (once btn fired)
+      const map = L.map('map').setView([25.03382, 121.5434], 17);
       // console.log(map);
 
       //   https://wiki.openstreetmap.org/wiki/Tile_servers
@@ -242,29 +262,25 @@
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }).addTo(map);
 
-      L.marker([25.03382, 121.5434])
+      // init popup -> would be removed once btn is fired
+      const initMarker = L.marker([25.03382, 121.5434])
         .addTo(map)
         .bindPopup('我們的公司在這裡歐👍')
         .openPopup();
 
-      // 紅圈
-      // let circle = L.circle([25.03382, 121.5434], {
-      //   color: 'red',
-      //   fillColor: '#f03',
-      //   fillOpacity: 0.1,
-      //   // Radius of the circle, in meters.
-      //   radius: 300,
-      // })
-      //   .addTo(map)
-      //   .bindPopup('紅圈範圍');
+      // remove initMarker
+      map.on('click', () => initMarker.remove());
 
+      // 顯示當前位置 點擊新的時候移除先前的
+      let userPick;
       map.on('click', mapEvent => {
         console.log(mapEvent);
         // console.log(mapEvent.latlng);
         const { lat, lng } = mapEvent.latlng;
         console.log(lat, lng);
 
-        const a = L.marker([lat, lng])
+        userPick?.remove();
+        userPick = L.marker([lat, lng])
           .addTo(map)
           .bindPopup(
             L.popup({
@@ -272,13 +288,12 @@
               minWidth: 100,
               autoClose: false,
               closeOnClick: false,
-              className: 'NOTE_my_class',
+              className: 'map_icon',
             })
           )
           .setPopupContent('你點的位置')
           .openPopup();
-
-        console.log(a);
+        console.log(userPick);
       });
 
       /*
@@ -301,6 +316,7 @@
         */
 
       // NOTE render info into page by using geoLocation & geoReverse
+      let curCircle; //避免重複點擊時效果疊加 會於下列函式中 先remove 後再次給值
       const fetchLocationInfo = async () => {
         try {
           titleText.innerText = '計算中';
@@ -335,8 +351,12 @@
           geoBtn.innerText = '點擊再次尋找 🚴‍♂️';
           geoBtn.classList.add('geo_btn_shine');
 
+          // current location popup
+          L.marker([lat, lng]).addTo(map).bindPopup('您的當前位置').openPopup();
           // NOTE 紅圈
-          let circle = L.circle([lat, lng], {
+
+          curCircle?.remove();
+          curCircle = L.circle([lat, lng], {
             color: 'red',
             fillColor: '#f03',
             fillOpacity: 0.1,
@@ -347,10 +367,8 @@
             .addTo(map)
             .bindPopup('紅圈範圍');
 
-          // 跳到當前位置
+          // 跳到當前位置 zoom 改為13 放大範圍
           map.flyTo([lat, lng], 14);
-
-          L.marker([lat, lng]).addTo(map).bindPopup('您的當前位置').openPopup();
         } catch (err) {
           alert(err.message);
         }
