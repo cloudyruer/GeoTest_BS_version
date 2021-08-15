@@ -268,8 +268,8 @@
         .bindPopup('我們的公司在這裡歐👍')
         .openPopup();
 
-      // remove initMarker
-      map.on('click', () => initMarker.remove());
+      // NOTE 有時間可討論看看 甚麼時間點 remove initMarker (暫定為全視窗)
+      window.addEventListener('click', () => initMarker.remove());
 
       // 顯示當前位置 點擊新的時候移除先前的
       let userPick;
