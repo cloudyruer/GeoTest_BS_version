@@ -545,6 +545,7 @@
         if (!isPass) return;
 
         const fd = new FormData(geoForm);
+        // TODO: ?? php fd.append("member_id", <?=$_SESSION['user']['id']?>);
         fd.append("lat", latText.textContent);
         fd.append("lng", lngText.textContent);
         fd.append("city", cityText.textContent);
